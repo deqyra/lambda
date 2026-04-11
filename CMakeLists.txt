@@ -10,5 +10,18 @@ project(
     LANGUAGES C CXX
 )
 
+include( FetchContent )
+
+# cpptools
+FetchContent_Declare(
+    cpptools
+    DOWNLOAD_EXTRACT_TIMESTAMP ON
+    URL https://github.com/deqyra/CppTools/archive/refs/tags/v1.1.zip
+    FIND_PACKAGE_ARGS 1.1
+)
+
+set( CPPTOOLS_SKIP_TESTS ON )
+FetchContent_MakeAvailable( cpptools )
+
 # Build stuff
 add_subdirectory( lambda )
