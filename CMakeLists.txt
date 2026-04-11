@@ -25,3 +25,27 @@ FetchContent_MakeAvailable( cpptools )
 
 # Build stuff
 add_subdirectory( lambda )
+
+# Build and run tests
+if( LAMBDA_BUILD_TESTS )
+    FetchContent_Declare(
+        Catch2
+        DOWNLOAD_EXTRACT_TIMESTAMP ON
+        URL https://github.com/catchorg/Catch2/archive/refs/tags/v3.5.1.zip
+        FIND_PACKAGE_ARGS
+    )
+
+    FetchContent_MakeAvailable( Catch2 )
+    list( APPEND CMAKE_MODULE_PATH ${catch2_SOURCE_DIR}/extras )
+
+    include( CTest )
+    include( Catch )
+
+    add_subdirectory( tests )
+
+    add_test(
+        NAME run_lambda_tests 
+        COMMAND lambda_tests
+        WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+    )
+endif(  )
