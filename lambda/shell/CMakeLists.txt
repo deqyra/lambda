@@ -3,6 +3,7 @@ add_executable( lambda_shell
     main.cpp
     shell_env.hpp
     shell.hpp
+    commands/help_command.hpp
 )
 
 target_include_directories( lambda_shell PUBLIC ${CMAKE_SOURCE_DIR} )
