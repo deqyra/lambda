@@ -1,5 +1,7 @@
 add_library( lambda_core INTERFACE
+    parse_context.hpp
     parse_error.hpp
+    parse.hpp
     token.hpp
 )
 
