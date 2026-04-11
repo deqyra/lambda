@@ -9,3 +9,6 @@ project(
     DESCRIPTION "A lambda calculus engine"
     LANGUAGES C CXX
 )
+
+# Build stuff
+add_subdirectory( lambda )
