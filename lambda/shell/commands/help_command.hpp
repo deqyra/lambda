@@ -8,6 +8,10 @@
 namespace ld::shell {
 
 static constexpr std::string_view HelpText =
+/* BEFORE MODIFYING!
+Remember to reflect any changes to the following parts in the relevant places:
+- Valid input expression kinds -> DeclareCommand help text
+*/
 R"(lambda, a lambda calculus engine
 Input may be any of the following:
 - Abstraction:     \x.x
@@ -24,13 +28,13 @@ The following commands are recognized:
 - ? or help:           Display this message
 - exit:                Exit lambda
 - export <path> ...:   Save declarations to a file
-- import <path> ...:   Load declarations from a file # TODO
+- import <path> ...:   Load declarations from a file
 - inspect <id>:        Get info about a declared identifer # TODO: two -> 2 -> \f.\x.(f (f x))
 - sub <M> <x> <N>:     In expression M, substitute every free occurrence of x for expression N
 - bake <M>:            In expression M, substitute all free variables for the named expressions they each identify
 
-Some commands will act conservatively when their running would lead to conflict or loss. Appending a bang ('!') to the
-command name causes the command to force its action regardless of consequences. The following commands are concerned:
+Some commands act conservatively when running them normally would lead to conflict or loss. Appending a bang ('!') to
+the command name causes the command to force its action regardless. The following commands are concerned:
 - let will not redeclare an identifier already in use, whereas let! will.
 - import will not override existing declarations with the imported ones, whereas import! will.
 - export will not overwrite an existing file on disk, whereas export! will.

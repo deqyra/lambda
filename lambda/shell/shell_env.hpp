@@ -11,6 +11,8 @@
 
 namespace ld::shell {
 
+using DeclarationMap = std::map<std::string, AST, tools::any_transparent_less>;
+
 struct ShellEnv : public tools::cli::default_shell_environment {
     std::string_view shell_prompt_head() const {
         return "> ";
@@ -21,7 +23,7 @@ struct ShellEnv : public tools::cli::default_shell_environment {
         return s;
     }
 
-    std::map<std::string, AST, tools::any_transparent_less> declarations;
+    DeclarationMap declarations;
 };
 static_assert(tools::cli::shell_environment<ShellEnv>);
 
