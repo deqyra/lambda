@@ -10,6 +10,8 @@ project(
     LANGUAGES C CXX
 )
 
+option( LAMBDA_BUILD_TESTS "Whether or not to build and run Lambda unit tests" OFF )
+
 include( FetchContent )
 
 # cpptools

@@ -1,5 +1,7 @@
 .cache
 .clangd
-.vscode
+.vs*
 compile_commands.json
+CMakeSettings.json
 build*/
+out*/
