@@ -9,6 +9,7 @@
 #include <lambda/shell/commands/declare_command.hpp>
 #include <lambda/shell/commands/help_command.hpp>
 #include <lambda/shell/commands/import_command.hpp>
+#include <lambda/shell/commands/inspect_command.hpp>
 #include <lambda/shell/commands/reduce_command.hpp>
 
 namespace ld::shell {
@@ -20,6 +21,7 @@ class Shell {
     DeclareCommand _declare;
     HelpCommand _help;
     ImportCommand _import;
+    InspectCommand _inspect;
     ReduceCommand _reduce;
 
     static constexpr std::string_view PreambleString =
@@ -35,6 +37,7 @@ public:
         _shell.set_command("export!", _export);
         _shell.set_command("import", _import);
         _shell.set_command("import!", _import);
+        _shell.set_command("inspect", _inspect);
         _shell.set_command("let", _declare);
         _shell.set_command("let!", _declare);
         _shell.set_command("help", _help);
