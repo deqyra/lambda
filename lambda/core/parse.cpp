@@ -1,3 +1,4 @@
+#include <stdexcept>
 #include <string_view>
 #include <variant>
 
@@ -15,6 +16,7 @@ tools::tree<SyntaxNode> parse_expression(ParseContext& ctx) {
     using enum ETokenKind;
 
     tools::tree<SyntaxNode> syntax_tree;
+    ctx.exhaust_whitespace();
     const auto& token = ctx.peek();
     try {
         switch (token.kind) {
@@ -35,6 +37,7 @@ tools::tree<SyntaxNode> parse_abstraction(ParseContext& ctx) {
     syntax_tree.emplace_node(syntax_tree.root(), SyntaxNode{ Abstraction{}, "" });
 
     try { // Lambda <expr> Dot <expr>
+        ctx.exhaust_whitespace();
         const auto begin = ctx.data();
         ctx.expect_and_consume(Lambda);
 
@@ -63,6 +66,7 @@ tools::tree<SyntaxNode> parse_application(ParseContext& ctx) {
     syntax_tree.emplace_node(syntax_tree.root(), SyntaxNode{ Application{}, "" });
 
     try { // LeftParenthesis <expr> Whitespace <expr> RightParenthesis
+        ctx.exhaust_whitespace();
         const auto begin = ctx.data();
         ctx.expect_and_consume(LeftParenthesis);
 
@@ -87,6 +91,7 @@ tools::tree<SyntaxNode> parse_application(ParseContext& ctx) {
 }
 
 tools::tree<SyntaxNode> parse_identifier(ParseContext& ctx) {
+    ctx.exhaust_whitespace();
     const auto id = ctx.expect_and_consume(ETokenKind::Identifier);
 
     tools::tree<SyntaxNode> syntax_tree;
@@ -96,12 +101,105 @@ tools::tree<SyntaxNode> parse_identifier(ParseContext& ctx) {
 }
 
 tools::tree<SyntaxNode> parse_variable(ParseContext& ctx) {
+    ctx.exhaust_whitespace();
     const auto id = ctx.expect_and_consume(ETokenKind::Identifier);
 
     tools::tree<SyntaxNode> syntax_tree;
     syntax_tree.emplace_node(syntax_tree.root(), SyntaxNode{ Variable{}, id.text});
 
     return syntax_tree;
+}
+
+std::string minimal_source_from_syntax_subtree(tools::tree<SyntaxNode>::const_node_handle_t syntax_subtree) {
+    const SyntaxNode& node = syntax_subtree.value();
+    tools::overloaded_visitor make_string{
+        [&](const Identifier&) -> std::string {
+            return std::string(node.text);
+        },
+        [&](const Variable&) -> std::string {
+            // variable nodes should be handled by the Abstraction case and never visited
+            throw std::runtime_error("unexpected");
+        },
+        [&](const Abstraction&) -> std::string {
+            return std::format(
+                "\\{}.{}",
+                syntax_subtree.child(0)->text,
+                minimal_source_from_syntax_subtree(syntax_subtree.child(1))
+            );
+        },
+        [&](const Application&) -> std::string {
+            return std::format(
+                "({} {})",
+                minimal_source_from_syntax_subtree(syntax_subtree.child(0)),
+                minimal_source_from_syntax_subtree(syntax_subtree.child(1))
+            );
+        }
+    };
+    return std::visit(make_string, node.expr);
+}
+
+std::size_t rebind_text_from_minimal_source(std::string_view source, tools::tree<SyntaxNode>::node_handle_t syntax_subtree) {
+    SyntaxNode& node = syntax_subtree.value();
+    tools::overloaded_visitor rebind_text{
+        [&](const Identifier&) -> std::size_t {
+            auto id_size = node.text.size();
+            node.text = source.substr(0, id_size);
+            source.remove_prefix(id_size); // consume identifier
+            return id_size;
+        },
+        [&](const Variable&) -> std::size_t {
+            auto var_size = node.text.size();
+            node.text = source.substr(0, var_size);
+            source.remove_prefix(var_size); // consume variable name
+            return var_size;
+        },
+        [&](const Abstraction&) -> std::size_t {
+            auto original = source;
+
+            source.remove_prefix(1); // consume '\'
+            auto var_size = rebind_text_from_minimal_source(source, syntax_subtree.child(0));
+            source.remove_prefix(var_size); // consume rebound expression
+
+            source.remove_prefix(1); // consume '.'
+            auto body_size = rebind_text_from_minimal_source(source, syntax_subtree.child(1));
+            source.remove_prefix(body_size); // consume rebound expression
+
+            auto abs_size = var_size + body_size + 2;
+            node.text = original.substr(0, abs_size);
+
+            return abs_size;
+        },
+        [&](const Application&) -> std::size_t {
+            auto original = source;
+
+            source.remove_prefix(1); // consume '('
+            auto left_size = rebind_text_from_minimal_source(source, syntax_subtree.child(0));
+            source.remove_prefix(left_size); // consume rebound expression
+
+            source.remove_prefix(1); // consume ' '
+            auto right_size = rebind_text_from_minimal_source(source, syntax_subtree.child(1));
+            source.remove_prefix(right_size); // consume rebound expression
+
+            source.remove_prefix(1); // consume ')'
+
+            auto app_size = left_size + right_size + 3;
+            node.text = original.substr(0, app_size);
+            return app_size;
+        }
+    };
+
+    return std::visit(rebind_text, node.expr);
+}
+
+AST make_minimal_ast(tools::tree<SyntaxNode>&& syntax_tree) {
+    using namespace tools::traversal;
+
+    AST result;
+    result.source = minimal_source_from_syntax_subtree(syntax_tree.root());
+    result.tree = std::move(syntax_tree);
+    rebind_text_from_minimal_source(result.source, result.tree.root());
+
+    return result;
 }
 
 AST parse_full_expression(const TokenizedSourceView& source) {
@@ -111,23 +209,17 @@ AST parse_full_expression(const TokenizedSourceView& source) {
     ctx.exhaust_whitespace();
 
     if (ctx.empty()) {
-        return {
-            .source = source.text,
-            .tree = {}
-        };
+        return {};
     }
 
-    tools::tree<SyntaxNode> expr = parse_expression(ctx);
+    tools::tree<SyntaxNode> syntax_tree = parse_expression(ctx);
 
     ctx.exhaust_whitespace();
     if (not ctx.empty()) {
         throw parse_error("unexpected tokens past end of full expression at char {}", ctx.text_pos());
     }
 
-    return {
-        .source = source.text,
-        .tree = std::move(expr)
-    };
+    return make_minimal_ast(std::move(syntax_tree));
 }
 
 } // namespace ld

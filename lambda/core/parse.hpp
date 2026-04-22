@@ -36,7 +36,7 @@ struct SyntaxNode {
 
 // abstract syntax tree
 struct AST {
-    std::string_view source;
+    std::string source;
     tools::tree<SyntaxNode> tree;
 
     friend bool operator==(const AST& left, const AST& right) = default;
@@ -47,6 +47,10 @@ tools::tree<SyntaxNode> parse_abstraction(ParseContext& ctx);
 tools::tree<SyntaxNode> parse_application(ParseContext& ctx);
 tools::tree<SyntaxNode> parse_identifier(ParseContext& ctx);
 tools::tree<SyntaxNode> parse_variable(ParseContext& ctx);
+
+std::string minimal_source_from_syntax_subtree(tools::tree<SyntaxNode>::const_node_handle_t syntax_subtree);
+std::size_t rebind_text_from_minimal_source(std::string_view source, tools::tree<SyntaxNode>::node_handle_t syntax_subtree);
+AST make_minimal_ast(tools::tree<SyntaxNode>&& syntax_tree);
 
 AST parse_full_expression(const TokenizedSourceView& source);
 
