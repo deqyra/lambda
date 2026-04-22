@@ -28,7 +28,7 @@ struct Variable {
 struct SyntaxNode {
     using LexicalExpression = std::variant<Abstraction, Application, Identifier, Variable>;
 
-    LexicalExpression lexical_expr;
+    LexicalExpression expr;
     std::string_view text;
 
     friend bool operator==(const SyntaxNode& left, const SyntaxNode& right) = default;
@@ -134,7 +134,7 @@ tools::tree<SyntaxNode> parse_variable(ParseContext& ctx) {
     return expr;
 }
 
-AST parse_full_expression(const TokenizedSource& source) {
+AST parse_full_expression(const TokenizedSourceView& source) {
     using enum ETokenKind;
 
     ParseContext ctx(source);

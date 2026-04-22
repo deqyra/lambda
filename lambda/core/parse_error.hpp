@@ -38,8 +38,7 @@ private:
         );                                      \
     }                                           \
 
-inline std::string nested_exception_to_string(const std::exception& e, int level =  0)
-{
+inline std::string nested_exception_to_string(const std::exception& e, int level = 0) {
     auto result = std::format("{}{}\n", std::string(level, ' '), e.what());
 
     try {

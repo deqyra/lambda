@@ -5,8 +5,9 @@
 
 #define TAGS "[token]"
 
+namespace ld {
+
 using namespace std::string_view_literals;
-using namespace ld;
 using enum ETokenKind;
 
 TEST_CASE("Token::Kind::from_char", TAGS) {
@@ -39,14 +40,14 @@ TEST_CASE("Token::Kind::from_char", TAGS) {
     }
 }
 
-TEST_CASE("Tokenize - empty string", TAGS) {
-    REQUIRE(tokenize("") == TokenizedSource{});
+TEST_CASE("tokenize - empty string", TAGS) {
+    REQUIRE(tokenize("") == TokenizedSourceView{});
 }
 
-TEST_CASE("Tokenize - single-character tokens", TAGS) {
+TEST_CASE("tokenize - single-character tokens", TAGS) {
     constexpr auto Source = " q\t.E\\)\r*(\f1\v_"sv;
 
-    const auto Expected = TokenizedSource{
+    const auto Expected = TokenizedSourceView{
         .text = Source,
         .tokens = {
             { Whitespace,       Source.substr( 0, 1) },
@@ -69,10 +70,10 @@ TEST_CASE("Tokenize - single-character tokens", TAGS) {
     REQUIRE(tokenize(Source) == Expected);
 }
 
-TEST_CASE("Tokenize - multi-character tokens", TAGS) {
+TEST_CASE("tokenize - multi-character tokens", TAGS) {
     constexpr auto Source = "\t \\func. \f \\var.  (f   x)\r\n"sv;
 
-    const auto Expected = TokenizedSource{
+    const auto Expected = TokenizedSourceView{
         .text = Source,
         .tokens = {
             { Whitespace,       Source.substr( 0, 2) },
@@ -94,4 +95,6 @@ TEST_CASE("Tokenize - multi-character tokens", TAGS) {
     };
 
     REQUIRE(tokenize(Source) == Expected);
+}
+
 }

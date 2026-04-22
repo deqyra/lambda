@@ -24,7 +24,7 @@ constexpr bool is_space(char c) {
 
 constexpr bool is_identifier_char(char c) {
     /* BEFORE MODIFYING!
-    Remember to reflect any changes in DeclareCommand help text.
+    Remember to reflect any changes in shell::DeclareCommand help text.
     */
     static constexpr std::string_view ExtraIdentifierCharSet = "_-*$+/~@";
     return is_alpha_num(c) or is_in(ExtraIdentifierCharSet, c);
@@ -56,19 +56,13 @@ struct Token {
 
         static constexpr Token::Kind::_kind from_char(char c) noexcept {
             using enum _kind;
-            if (c == '\\') {
-                return Lambda;
-            } else if (c == '.') {
-                return Dot;
-            } else if (c == '(') {
-                return LeftParenthesis;
-            } else if (c == ')') {
-                return RightParenthesis;
-            } else if (is_identifier_char(c)) {
-                return Identifier;
-            } else if (is_space(c)) {
-                return Whitespace;
-            }
+
+            if (c == '\\')             { return Lambda; }
+            if (c == '.')              { return Dot; }
+            if (c == '(')              { return LeftParenthesis; }
+            if (c == ')')              { return RightParenthesis; }
+            if (is_identifier_char(c)) { return Identifier; }
+            if (is_space(c))           { return Whitespace; }
 
             return Invalid;
         }
@@ -82,14 +76,14 @@ struct Token {
 
 using ETokenKind = Token::Kind::_kind; // provided for using enum purposes (using enum Token::Kind does not work)
 
-struct TokenizedSource {
+struct TokenizedSourceView {
     std::string_view text;
     std::vector<Token> tokens;
 
-    friend constexpr bool operator==(const TokenizedSource& left, const TokenizedSource& right) noexcept = default;
+    friend constexpr bool operator==(const TokenizedSourceView& left, const TokenizedSourceView& right) noexcept = default;
 };
 
-constexpr TokenizedSource tokenize(std::string_view source) {
+constexpr TokenizedSourceView tokenize(std::string_view source) {
     namespace stdv = std::views;
     using enum ETokenKind;
 
@@ -146,9 +140,8 @@ constexpr std::string_view to_string(ETokenKind token_kind) {
     case Identifier:       return "Identifier";
     case Whitespace:       return "Whitespace";
     case Invalid:          return "Invalid";
+    default:               return "Unknown";
     }
-
-    return "Unknown";
 }
 
 } // namespace ld

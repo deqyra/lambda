@@ -10,12 +10,12 @@
 namespace ld {
 
 class ParseContext {
-    const TokenizedSource& _source;
+    const TokenizedSourceView& _source;
     std::size_t _text_pos;
     std::size_t _token_pos;
 
 public:
-    constexpr ParseContext(const TokenizedSource& source) noexcept
+    constexpr ParseContext(const TokenizedSourceView& source) noexcept
         : _source(source)
         , _text_pos(0)
         , _token_pos(0)
@@ -59,6 +59,10 @@ public:
     constexpr void exhaust_whitespace() {
         using enum ETokenKind;
         while (not empty() and peek().kind == Whitespace) advance();
+    }
+
+    constexpr const char* data() noexcept {
+        return _source.text.data() + _text_pos;
     }
 
     constexpr std::size_t text_pos() noexcept {
