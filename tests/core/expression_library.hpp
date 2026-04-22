@@ -1,47 +1,217 @@
-#include <lambda/core/token.hpp>
-#include <lambda/core/parse.hpp>
+#include <tests/core/test_expr.hpp>
 
 namespace ld::expr {
 
-namespace text {
-    inline constexpr std::string_view One = R"(\f.\x.(f x))";
-}
+inline const TestExpr Identifier = {
+    "x",                                                              /* text */
+    {                                                               /* tokens */
+        { ETk::Identifier }
+    },
+    {
+        ld::Identifier{}, 0
+    }
+};
 
-namespace tokens {
-    inline const TokenizedSource One = {
-        .text = text::One,
-        .tokens = {
-            { Token::Kind::Lambda,           text::One.substr( 0, 1) },
-            { Token::Kind::Identifier,       text::One.substr( 1, 1) },
-            { Token::Kind::Dot,              text::One.substr( 2, 1) },
-            { Token::Kind::Lambda,           text::One.substr( 3, 1) },
-            { Token::Kind::Identifier,       text::One.substr( 4, 1) },
-            { Token::Kind::Dot,              text::One.substr( 5, 1) },
-            { Token::Kind::LeftParenthesis,  text::One.substr( 6, 1) },
-            { Token::Kind::Identifier,       text::One.substr( 7, 1) },
-            { Token::Kind::Whitespace,       text::One.substr( 8, 1) },
-            { Token::Kind::Identifier,       text::One.substr( 9, 1) },
-            { Token::Kind::RightParenthesis, text::One.substr(10, 1) }
+inline const TestExpr IdentifierExtraSpaces = {
+    " x ",                                                            /* text */
+    {                                                               /* tokens */
+        { ETk::Whitespace },
+        { ETk::Identifier },
+        { ETk::Whitespace }
+    },
+    {                                                          /* syntax tree */
+        ld::Identifier{}, 1
+    }
+};
+
+inline const TestExpr InvalidIdentifier = {
+    "=",                                                              /* text */
+    {                                                               /* tokens */
+        { ETk::Invalid }
+    }
+};
+
+inline const TestExpr Variable = {
+    "x",                                                              /* text */
+    {                                                               /* tokens */
+        { ETk::Identifier }
+    },
+    {
+        ld::Variable{}
+    }
+};
+
+inline const TestExpr VariableExtraSpaces = {
+    " x ",                                                            /* text */
+    {                                                               /* tokens */
+        { ETk::Whitespace },
+        { ETk::Identifier },
+        { ETk::Whitespace }
+    },
+    {                                                          /* syntax tree */
+        ld::Variable{}, 1
+    }
+};
+
+inline const TestExpr Application = {
+    "(x y)",                                                          /* text */
+    {                                                               /* tokens */
+        { ETk::LeftParenthesis  },
+        { ETk::Identifier       },
+        { ETk::Whitespace       },
+        { ETk::Identifier       },
+        { ETk::RightParenthesis }
+    },
+    {                                                          /* syntax tree */
+        ld::Application{}, 0, 5, {
+            { ld::Identifier{}, 1, 1 },
+            { ld::Identifier{}, 3, 1 }
         }
-    };
-}
+    }
+};
 
-namespace ast {
-    inline const AST One = {
-        .source = text::One,
-        .tree = {{
-            { Abstraction{}, text::One.substr(0, 11) }, {
-                {{ Variable{}, text::One.substr(1, 1) }, {}},
-                {{ Abstraction{}, text::One.substr(3, 8) }, {
-                    {{ Variable{}, text::One.substr(4, 1) }, {}},
-                    {{ Application{}, text::One.substr(6, 5) }, {
-                        {{ Identifier{}, text::One.substr(7, 1) }, {}},
-                        {{ Identifier{}, text::One.substr(9, 1) }, {}}
-                    }},
-                }},
-            }
-        }}
-    };
-}
+inline const TestExpr ApplicationExtraSpaces = {
+    " (x   y ) ",                                                     /* text */
+    {                                                               /* tokens */
+        { ETk::Whitespace       },
+        { ETk::LeftParenthesis  },
+        { ETk::Identifier       },
+        { ETk::Whitespace, 3    },
+        { ETk::Identifier       },
+        { ETk::Whitespace       },
+        { ETk::RightParenthesis },
+        { ETk::Whitespace       }
+    },
+    {                                                          /* syntax tree */
+        ld::Application{}, 1, 8, {
+            { ld::Identifier{}, 2, 1 },
+            { ld::Identifier{}, 6, 1 }
+        }
+    }
+};
+
+inline const TestExpr InvalidApplication = {
+    "(x)",                                                            /* text */
+    {                                                               /* tokens */
+        { ETk::LeftParenthesis  },
+        { ETk::Identifier       },
+        { ETk::RightParenthesis }
+    }
+};
+
+inline const TestExpr Abstraction = {
+    "\\x.x",                                                          /* text */
+    {                                                               /* tokens */
+        { ETk::Lambda     },
+        { ETk::Identifier },
+        { ETk::Dot        },
+        { ETk::Identifier }
+    },
+    {                                                          /* syntax tree */
+        ld::Abstraction{}, 0, 4, {
+            { ld::Variable{},   1, 1 },
+            { ld::Identifier{}, 3, 1 }
+        }
+    }
+};
+
+inline const TestExpr AbstractionExtraSpaces = {
+    "  \\ x .x ",                                                     /* text */
+    {                                                               /* tokens */
+        { ETk::Whitespace, 2 },
+        { ETk::Lambda        },
+        { ETk::Whitespace    },
+        { ETk::Identifier    },
+        { ETk::Whitespace    },
+        { ETk::Dot           },
+        { ETk::Identifier    },
+        { ETk::Whitespace    }
+    },
+    {                                                          /* syntax tree */
+        ld::Abstraction{}, 2, 6, {
+            { ld::Variable{},   4, 1 },
+            { ld::Identifier{}, 7, 1 }
+        }
+    }
+};
+
+inline const TestExpr InvalidAbstraction = {
+    "\\x(.x",                                                         /* text */
+    {                                                               /* tokens */
+        { ETk::Lambda  },
+        { ETk::Identifier       },
+        { ETk::LeftParenthesis },
+        { ETk::Dot },
+        { ETk::Identifier },
+    }
+};
+
+inline const TestExpr One = {
+    R"(\f.\x.(f x))",                                                 /* text */
+    {                                                               /* tokens */
+        { ETk::Lambda           },
+        { ETk::Identifier       },
+        { ETk::Dot              },
+        { ETk::Lambda           },
+        { ETk::Identifier       },
+        { ETk::Dot              },
+        { ETk::LeftParenthesis  },
+        { ETk::Identifier       },
+        { ETk::Whitespace       },
+        { ETk::Identifier       },
+        { ETk::RightParenthesis }
+    },
+    {                                                          /* syntax tree */
+        ld::Abstraction{}, 0, 11, {
+            { ld::Variable{},    1, 1 },
+            { ld::Abstraction{}, 3, 8, {
+                { ld::Variable{},    4, 1 },
+                { ld::Application{}, 6, 5, {
+                    { ld::Identifier{}, 7, 1 },
+                    { ld::Identifier{}, 9, 1 }
+                }}
+            }}
+        }
+    }
+};
+
+inline const TestExpr OneExtraSpaces = {
+    R"( \ f  . \ x .  ( f x ) )",                                     /* text */
+    {                                                               /* tokens */
+        { ETk::Whitespace       },
+        { ETk::Lambda           },
+        { ETk::Whitespace       },
+        { ETk::Identifier       },
+        { ETk::Whitespace, 2    },
+        { ETk::Dot              },
+        { ETk::Whitespace       },
+        { ETk::Lambda           },
+        { ETk::Whitespace       },
+        { ETk::Identifier       },
+        { ETk::Whitespace       },
+        { ETk::Dot              },
+        { ETk::Whitespace, 2    },
+        { ETk::LeftParenthesis  },
+        { ETk::Whitespace       },
+        { ETk::Identifier       },
+        { ETk::Whitespace       },
+        { ETk::Identifier       },
+        { ETk::Whitespace       },
+        { ETk::RightParenthesis },
+        { ETk::Whitespace       }
+    },
+    {                                                          /* syntax tree */
+        ld::Abstraction{}, 1, 21, {
+            { ld::Variable{},    3, 1 },
+            { ld::Abstraction{}, 8, 14, {
+                { ld::Variable{},    10, 1 },
+                { ld::Application{}, 15, 7, {
+                    { ld::Identifier{}, 17, 1 },
+                    { ld::Identifier{}, 19, 1 }
+                }}
+            }}
+        }
+    }
+};
 
 }
