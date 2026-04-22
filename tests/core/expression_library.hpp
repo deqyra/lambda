@@ -44,16 +44,4 @@ namespace ast {
     };
 }
 
-struct TestExpr {
-    std::string_view text;
-    TokenizedSource tokenizedSource;
-    AST ast;
-};
-
-const TestExpr One = {
-    .text = text::One,
-    .tokenizedSource = tokens::One,
-    .ast = ast::One
-};
-
 }
