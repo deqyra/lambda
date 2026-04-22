@@ -10,8 +10,9 @@ set( CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR} )
 add_executable( lambda_tests
     ostream_dump.cpp
     to_string.cpp
-    core/test_token.cpp
     core/test_parse.cpp
+    core/test_parse_context.cpp
+    core/test_token.cpp
 )
 target_include_directories( lambda_tests PRIVATE
     ${CMAKE_SOURCE_DIR}
