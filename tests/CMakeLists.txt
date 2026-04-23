@@ -8,6 +8,8 @@ set( CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR} )
 set( CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR} )
 
 add_executable( lambda_tests
+    ostream_dump.cpp
+    to_string.cpp
     core/test_token.cpp
     core/test_parse.cpp
 )
