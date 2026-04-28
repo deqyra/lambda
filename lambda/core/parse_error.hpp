@@ -8,6 +8,9 @@
 namespace ld {
 
 struct parse_error : std::exception {
+    parse_error(const parse_error&) = default;
+    parse_error(parse_error&&) = default;
+
     parse_error(std::string_view text, std::string_view expr) :
         _text(std::format("{} -- {}", text, expr))
     {
@@ -32,11 +35,11 @@ private:
 };
 
 #define OR_THROW_NESTED_PARSE_ERROR(...) \
-    catch (const std::exception& e) {           \
-        std::throw_with_nested(                 \
-            parse_error(__VA_ARGS__)            \
-        );                                      \
-    }                                           \
+    catch (const std::exception&) {      \
+        std::throw_with_nested(          \
+            parse_error(__VA_ARGS__)     \
+        );                               \
+    }                                    \
 
 inline std::string nested_exception_to_string(const std::exception& e, int level = 0) {
     auto result = std::format("{}{}\n", std::string(level, ' '), e.what());

@@ -1,6 +1,7 @@
 #ifndef LAMBDA_SHELL_COMMANDS_INSPECT_COMMAND_HPP
 #define LAMBDA_SHELL_COMMANDS_INSPECT_COMMAND_HPP
 
+#include <format>
 #include <ranges>
 
 #include <cpptools/utility/string.hpp>
@@ -14,7 +15,7 @@ namespace {
     std::string expand_definition(std::string_view id, const AST& expression, const DeclarationMap& decls) {
         std::string result;
 
-        const auto& [expr, text] = expression.tree.root().value();
+        const auto& [expr, text] = expression.tree().root().value();
         const auto* identifier = std::get_if<Identifier>(&expr);
 
         // recursively try to expand expressions which consist of a single identifier
@@ -54,7 +55,7 @@ class InspectCommand : public shell_t::command {
             auto skipped_decls = std::string_view(undeclared_ids);
             skipped_decls.remove_prefix(2); // remove initial ", "
             s.out << std::format(
-                "The following identifiers did not match any known declaration and were not expanded: {}\n", undeclared_ids
+                "The following identifiers did not match any known declaration and were not expanded: {}\n", skipped_decls
             );
         }
 

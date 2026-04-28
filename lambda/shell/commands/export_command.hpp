@@ -1,6 +1,7 @@
 #ifndef LAMBDA_SHELL_COMMANDS_EXPORT_COMMAND_HPP
 #define LAMBDA_SHELL_COMMANDS_EXPORT_COMMAND_HPP
 
+#include <format>
 #include <fstream>
 #include <filesystem>
 #include <ostream>
@@ -50,7 +51,7 @@ can be used to instead silently overwrite it.
         auto out_file_path = std::filesystem::path(args[0]);
 
         if (not force and std::filesystem::exists(out_file_path)) {
-            s.err << std::format("export: file {} already exists, use export! to overwrite it", out_file_path.string());
+            s.err << std::format("export: file {} already exists, use export! to overwrite it\n", out_file_path.string());
             return code::bad_arguments;
         }
 
@@ -99,7 +100,7 @@ can be used to instead silently overwrite it.
 
 private:
     std::string make_declaration(std::string_view identifier, AST expression) {
-        return std::format("let {}: {}\n", identifier, expression.tree.root()->text);
+        return std::format("let {}: {}\n", identifier, expression.tree().root()->text);
     }
 };
 

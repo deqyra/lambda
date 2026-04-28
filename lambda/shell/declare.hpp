@@ -52,11 +52,11 @@ inline declare_status declare(std::string_view declaration, bool force, Declarat
 
     auto body = declaration.substr(colon_pos + 1);
 
-    AST expression;
+    AST ast;
     try {
-        expression = parse_full_expression(tokenize(body));
-    } catch (const parse_error& e) {
-        return { invalid_body, std::string(identifier), std::make_exception_ptr(e) };
+        ast = parse_full_expression(tokenize(body));
+    } catch (const parse_error&) {
+        return { invalid_body, std::string(identifier), std::current_exception() };
     }
 
     // TODO: declared identifier must not appear as a free variable in parsed expression
@@ -65,7 +65,7 @@ inline declare_status declare(std::string_view declaration, bool force, Declarat
         std::tie(it, std::ignore) = decl_map.insert({std::string(identifier), AST{}});
     }
 
-    it->second = std::move(expression);
+    it->second = std::move(ast);
     return { ok };
 }
 
