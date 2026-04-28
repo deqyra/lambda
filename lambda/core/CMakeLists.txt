@@ -1,4 +1,6 @@
 add_library( lambda_core
+    ast.hpp
+    ast.cpp
     parse_context.hpp
     parse_error.hpp
     parse.cpp

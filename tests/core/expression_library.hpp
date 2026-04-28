@@ -8,19 +8,18 @@ inline const TestExpr Identifier = {
         { ETk::Identifier }
     },
     {
-        ld::Identifier{}, 0
+        ld::Identifier{}
     }
 };
 
 inline const TestExpr IdentifierExtraSpaces = {
-    " x ",                                                            /* text */
+    "x ",                                                             /* text */
     {                                                               /* tokens */
-        { ETk::Whitespace },
         { ETk::Identifier },
         { ETk::Whitespace }
     },
     {                                                          /* syntax tree */
-        ld::Identifier{}, 1
+        ld::Identifier{}
     }
 };
 
@@ -42,14 +41,13 @@ inline const TestExpr Variable = {
 };
 
 inline const TestExpr VariableExtraSpaces = {
-    " x ",                                                            /* text */
+    "x ",                                                             /* text */
     {                                                               /* tokens */
-        { ETk::Whitespace },
         { ETk::Identifier },
         { ETk::Whitespace }
     },
     {                                                          /* syntax tree */
-        ld::Variable{}, 1
+        ld::Variable{}
     }
 };
 
@@ -71,9 +69,8 @@ inline const TestExpr Application = {
 };
 
 inline const TestExpr ApplicationExtraSpaces = {
-    " (x   y ) ",                                                     /* text */
+    "(x   y ) ",                                                      /* text */
     {                                                               /* tokens */
-        { ETk::Whitespace       },
         { ETk::LeftParenthesis  },
         { ETk::Identifier       },
         { ETk::Whitespace, 3    },
@@ -83,9 +80,9 @@ inline const TestExpr ApplicationExtraSpaces = {
         { ETk::Whitespace       }
     },
     {                                                          /* syntax tree */
-        ld::Application{}, 1, 8, {
-            { ld::Identifier{}, 2, 1 },
-            { ld::Identifier{}, 6, 1 }
+        ld::Application{}, 0, 8, {
+            { ld::Identifier{}, 1, 1 },
+            { ld::Identifier{}, 5, 1 }
         }
     }
 };
@@ -116,9 +113,8 @@ inline const TestExpr Abstraction = {
 };
 
 inline const TestExpr AbstractionExtraSpaces = {
-    "  \\ x .x ",                                                     /* text */
+    "\\ x .x ",                                                       /* text */
     {                                                               /* tokens */
-        { ETk::Whitespace, 2 },
         { ETk::Lambda        },
         { ETk::Whitespace    },
         { ETk::Identifier    },
@@ -128,9 +124,9 @@ inline const TestExpr AbstractionExtraSpaces = {
         { ETk::Whitespace    }
     },
     {                                                          /* syntax tree */
-        ld::Abstraction{}, 2, 6, {
-            { ld::Variable{},   4, 1 },
-            { ld::Identifier{}, 7, 1 }
+        ld::Abstraction{}, 0, 6, {
+            { ld::Variable{},   2, 1 },
+            { ld::Identifier{}, 5, 1 }
         }
     }
 };
@@ -176,9 +172,8 @@ inline const TestExpr One = {
 };
 
 inline const TestExpr OneExtraSpaces = {
-    R"( \ f  . \ x .  ( f x ) )",                                     /* text */
+    R"(\ f  . \ x .  ( f x ) )",                                      /* text */
     {                                                               /* tokens */
-        { ETk::Whitespace       },
         { ETk::Lambda           },
         { ETk::Whitespace       },
         { ETk::Identifier       },
@@ -201,13 +196,13 @@ inline const TestExpr OneExtraSpaces = {
         { ETk::Whitespace       }
     },
     {                                                          /* syntax tree */
-        ld::Abstraction{}, 1, 21, {
-            { ld::Variable{},    3, 1 },
-            { ld::Abstraction{}, 8, 14, {
-                { ld::Variable{},    10, 1 },
-                { ld::Application{}, 15, 7, {
-                    { ld::Identifier{}, 17, 1 },
-                    { ld::Identifier{}, 19, 1 }
+        ld::Abstraction{}, 0, 21, {
+            { ld::Variable{},    2, 1 },
+            { ld::Abstraction{}, 7, 14, {
+                { ld::Variable{},     9, 1 },
+                { ld::Application{}, 14, 7, {
+                    { ld::Identifier{}, 16, 1 },
+                    { ld::Identifier{}, 18, 1 }
                 }}
             }}
         }

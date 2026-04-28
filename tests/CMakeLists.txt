@@ -13,7 +13,9 @@ add_executable( lambda_tests
     core/test_parse.cpp
     core/test_parse_context.cpp
     core/test_token.cpp
+    core/test_ast.cpp
 )
+
 target_include_directories( lambda_tests PRIVATE
     ${CMAKE_SOURCE_DIR}
 )

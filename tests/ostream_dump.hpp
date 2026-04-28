@@ -1,8 +1,9 @@
 #ifndef TESTS_OSTREAM_DUMP_HPP
 #define TESTS_OSTREAM_DUMP_HPP
 
-#include <lambda/core/token.hpp>
+#include <lambda/core/ast.hpp>
 #include <lambda/core/parse.hpp>
+#include <lambda/core/token.hpp>
 
 namespace ld {
 

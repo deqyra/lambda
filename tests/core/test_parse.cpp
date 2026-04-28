@@ -1,7 +1,6 @@
-#include "test_expr.hpp"
-#include <catch2/catch_test_macros.hpp>
-
 #include <ranges>
+
+#include <catch2/catch_test_macros.hpp>
 
 #include <cpptools/container/tree/traversal.hpp>
 
@@ -12,6 +11,7 @@
 
 #include <tests/ostream_dump.hpp>
 #include <tests/core/expression_library.hpp>
+#include <tests/core/test_expr.hpp>
 
 #define TAGS "[parse]"
 
@@ -200,82 +200,51 @@ TEST_CASE("parse_expression", TAGS) {
     REQUIRE_THROWS_AS(parse_expression(ctx), parse_error);
 }
 
+using ExprPair = std::pair<const expr::TestExpr*, const expr::TestExpr*>;
+
 TEST_CASE("minimal_source_from_syntax_subtree", TAGS) {
-    const expr::TestExpr* exprs[] = {
-        &expr::Identifier,
-        &expr::Application,
-        &expr::Abstraction,
-        &expr::One,
+    ExprPair exprs[] = {
+        { &expr::IdentifierExtraSpaces,  &expr::Identifier },
+        { &expr::ApplicationExtraSpaces, &expr::Application },
+        { &expr::AbstractionExtraSpaces, &expr::Abstraction },
+        { &expr::OneExtraSpaces,         &expr::One }
     };
 
-    for (const auto* expr : exprs) {
-        REQUIRE(minimal_source_from_syntax_subtree(expr->ast.tree.root()) == expr->ast.source);
+    for (auto [with_spaces, without_spaces] : exprs) {
+        REQUIRE(minimal_source_from_syntax_subtree(with_spaces->ast.tree.root()) == without_spaces->ast.source);
     }
 }
 
 TEST_CASE("rebind_text_from_minimal_source - nominal", TAGS) {
-    const expr::TestExpr* exprs[] = {
-        &expr::Identifier,
-        &expr::Application,
-        &expr::Abstraction,
-        &expr::One,
+    ExprPair exprs[] = {
+        { &expr::IdentifierExtraSpaces,  &expr::Identifier },
+        { &expr::ApplicationExtraSpaces, &expr::Application },
+        { &expr::AbstractionExtraSpaces, &expr::Abstraction },
+        { &expr::OneExtraSpaces,         &expr::One }
     };
 
-    for (const auto* expr : exprs) {
-        std::string source = expr->ast.source;
-        auto tree = expr->ast.tree;
-        rebind_text_from_minimal_source(source, tree.root());
+    for (const auto& [WithSpaces, WithoutSpaces] : exprs) {
+        const auto& TreeWithoutSpaces = WithoutSpaces->ast.tree;
+        auto copy_with_spaces = WithSpaces->ast.tree;
+        rebind_text_from_minimal_source(WithoutSpaces->ast.source, copy_with_spaces.root());
 
-        auto orig_begin = expr->ast.source.c_str();
-        auto copy_begin = source.c_str();
+        REQUIRE(copy_with_spaces == TreeWithoutSpaces);
+        // this ensures the trees are the same both in value and structure
+        // but comparing the values is not enough
 
         using namespace tools::traversal;
-        namespace stdv = std::views;
-        for (const auto& [base_node, rebound_node]: stdv::zip(dfs<pre_order>(expr->ast.tree), dfs<pre_order>(tree))) {
-            // Rebound node must be equivalent to base node...
-            REQUIRE(rebound_node.expr == base_node.expr);
-            REQUIRE(rebound_node.text == base_node.text);
+        auto zipped_tree_nodes = std::views::zip(
+            dfs<pre_order>(copy_with_spaces),
+            dfs<pre_order>(TreeWithoutSpaces)
+        );
 
-            // ... but point into provided source
-            auto orig_offset = base_node.text.data() - orig_begin;
-            auto copy_offset = rebound_node.text.data() - copy_begin;
-            REQUIRE(copy_offset == orig_offset);
+        for (const auto& [rebound, NodeWithoutSpaces]: zipped_tree_nodes) {
+            // the string view in each rebound node must point to the exact same location
+            // as the string view in the corresponding node in the tree of ast_without_spaces
+            // (since the copied tree was rebound to ast_without_spaces's own source)
+            REQUIRE(rebound.text.data() == NodeWithoutSpaces.text.data());
         }
     }
-}
-
-TEST_CASE("make_minimal_ast", TAGS) {
-    auto ctx = ParseContext(expr::ApplicationExtraSpaces.tokenized_source);
-    auto tree = parse_expression(ctx);
-    auto ast = make_minimal_ast(std::move(tree));
-
-    REQUIRE(ast.source == expr::Application.ast.source);
-
-    auto orig_begin = expr::Application.ast.source.c_str();
-    auto copy_begin = ast.source.c_str();
-
-    using namespace tools::traversal;
-    namespace stdv = std::views;
-    for (const auto& [base_node, copy_node]: stdv::zip(dfs<pre_order>(expr::Application.ast.tree), dfs<pre_order>(ast.tree))) {
-        // Rebound node must be equivalent to base node...
-        REQUIRE(copy_node.expr == base_node.expr);
-        REQUIRE(copy_node.text == base_node.text);
-
-        // ... but point into provided source
-        auto orig_offset = base_node.text.data() - orig_begin;
-        auto copy_offset = copy_node.text.data() - copy_begin;
-        REQUIRE(copy_offset == orig_offset);
-    }
-}
-
-TEST_CASE("parse_full_expression - minimal expression", TAGS) {
-    auto result = parse_full_expression(expr::One.tokenized_source);
-    REQUIRE(result == expr::One.ast);
-}
-
-TEST_CASE("parse_full_expression - expression with extra spaces", TAGS) {
-    auto result = parse_full_expression(expr::OneExtraSpaces.tokenized_source);
-    REQUIRE(result == expr::One.ast);
 }
 
 }

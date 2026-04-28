@@ -5,7 +5,6 @@
 #   include <Windows.h>
 #endif
 
-
 using namespace ld;
 
 int main()

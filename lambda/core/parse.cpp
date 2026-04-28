@@ -1,3 +1,4 @@
+#include <format>
 #include <stdexcept>
 #include <string_view>
 #include <variant>
@@ -12,10 +13,10 @@
 
 namespace ld {
 
-tools::tree<SyntaxNode> parse_expression(ParseContext& ctx) {
+SyntaxTree parse_expression(ParseContext& ctx) {
     using enum ETokenKind;
 
-    tools::tree<SyntaxNode> syntax_tree;
+    SyntaxTree syntax_tree;
     ctx.exhaust_whitespace();
     const auto& token = ctx.peek();
     try {
@@ -30,14 +31,13 @@ tools::tree<SyntaxNode> parse_expression(ParseContext& ctx) {
     return syntax_tree;
 }
 
-tools::tree<SyntaxNode> parse_abstraction(ParseContext& ctx) {
+SyntaxTree parse_abstraction(ParseContext& ctx) {
     using enum ETokenKind;
 
-    tools::tree<SyntaxNode> syntax_tree;
+    SyntaxTree syntax_tree;
     syntax_tree.emplace_node(syntax_tree.root(), SyntaxNode{ Abstraction{}, "" });
 
     try { // Lambda <expr> Dot <expr>
-        ctx.exhaust_whitespace();
         const auto begin = ctx.data();
         ctx.expect_and_consume(Lambda);
 
@@ -59,14 +59,13 @@ tools::tree<SyntaxNode> parse_abstraction(ParseContext& ctx) {
     return syntax_tree;
 }
 
-tools::tree<SyntaxNode> parse_application(ParseContext& ctx) {
+SyntaxTree parse_application(ParseContext& ctx) {
     using enum ETokenKind;
 
-    tools::tree<SyntaxNode> syntax_tree;
+    SyntaxTree syntax_tree;
     syntax_tree.emplace_node(syntax_tree.root(), SyntaxNode{ Application{}, "" });
 
     try { // LeftParenthesis <expr> Whitespace <expr> RightParenthesis
-        ctx.exhaust_whitespace();
         const auto begin = ctx.data();
         ctx.expect_and_consume(LeftParenthesis);
 
@@ -90,27 +89,25 @@ tools::tree<SyntaxNode> parse_application(ParseContext& ctx) {
     return syntax_tree;
 }
 
-tools::tree<SyntaxNode> parse_identifier(ParseContext& ctx) {
-    ctx.exhaust_whitespace();
+SyntaxTree parse_identifier(ParseContext& ctx) {
     const auto id = ctx.expect_and_consume(ETokenKind::Identifier);
 
-    tools::tree<SyntaxNode> syntax_tree;
+    SyntaxTree syntax_tree;
     syntax_tree.emplace_node(syntax_tree.root(), SyntaxNode{ Identifier{}, id.text});
 
     return syntax_tree;
 }
 
-tools::tree<SyntaxNode> parse_variable(ParseContext& ctx) {
-    ctx.exhaust_whitespace();
+SyntaxTree parse_variable(ParseContext& ctx) {
     const auto id = ctx.expect_and_consume(ETokenKind::Identifier);
 
-    tools::tree<SyntaxNode> syntax_tree;
+    SyntaxTree syntax_tree;
     syntax_tree.emplace_node(syntax_tree.root(), SyntaxNode{ Variable{}, id.text});
 
     return syntax_tree;
 }
 
-std::string minimal_source_from_syntax_subtree(tools::tree<SyntaxNode>::const_node_handle_t syntax_subtree) {
+std::string minimal_source_from_syntax_subtree(SyntaxConstNodeHandle syntax_subtree) {
     const SyntaxNode& node = syntax_subtree.value();
     tools::overloaded_visitor make_string{
         [&](const Identifier&) -> std::string {
@@ -138,7 +135,7 @@ std::string minimal_source_from_syntax_subtree(tools::tree<SyntaxNode>::const_no
     return std::visit(make_string, node.expr);
 }
 
-std::size_t rebind_text_from_minimal_source(std::string_view source, tools::tree<SyntaxNode>::node_handle_t syntax_subtree) {
+std::size_t rebind_text_from_minimal_source(std::string_view source, SyntaxNodeHandle syntax_subtree) {
     SyntaxNode& node = syntax_subtree.value();
     tools::overloaded_visitor rebind_text{
         [&](const Identifier&) -> std::size_t {
@@ -189,37 +186,6 @@ std::size_t rebind_text_from_minimal_source(std::string_view source, tools::tree
     };
 
     return std::visit(rebind_text, node.expr);
-}
-
-AST make_minimal_ast(tools::tree<SyntaxNode>&& syntax_tree) {
-    using namespace tools::traversal;
-
-    AST result;
-    result.source = minimal_source_from_syntax_subtree(syntax_tree.root());
-    result.tree = std::move(syntax_tree);
-    rebind_text_from_minimal_source(result.source, result.tree.root());
-
-    return result;
-}
-
-AST parse_full_expression(const TokenizedSourceView& source) {
-    using enum ETokenKind;
-
-    ParseContext ctx(source);
-    ctx.exhaust_whitespace();
-
-    if (ctx.empty()) {
-        return {};
-    }
-
-    tools::tree<SyntaxNode> syntax_tree = parse_expression(ctx);
-
-    ctx.exhaust_whitespace();
-    if (not ctx.empty()) {
-        throw parse_error("unexpected tokens past end of full expression at char {}", ctx.text_pos());
-    }
-
-    return make_minimal_ast(std::move(syntax_tree));
 }
 
 } // namespace ld

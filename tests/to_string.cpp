@@ -1,5 +1,7 @@
 #include <tests/to_string.hpp>
 
+#include <cpptools/utility/overloaded_visitor.hpp>
+
 #include <format>
 
 namespace ld {
@@ -31,7 +33,7 @@ std::string to_string(const SyntaxNode& node) {
     return std::format("{}: {}", to_string(node.expr), node.text);
 }
 
-std::string to_string(tools::tree<SyntaxNode>::const_node_handle_t root, int depth) {
+std::string to_string(SyntaxConstNodeHandle root, int depth) {
     auto result = std::string(depth * 2, ' ') + to_string(*root) + '\n';
     for (const auto& child : root.children()) {
         result += to_string(child, depth + 1);
@@ -42,7 +44,7 @@ std::string to_string(tools::tree<SyntaxNode>::const_node_handle_t root, int dep
     return result;
 }
 
-std::string to_string(const tools::tree<SyntaxNode>& tree) {
+std::string to_string(const SyntaxTree& tree) {
     if (tree.empty()) {
         return "";
     }
@@ -51,7 +53,7 @@ std::string to_string(const tools::tree<SyntaxNode>& tree) {
 }
 
 std::string to_string(const AST& ast) {
-    return to_string(ast.tree);
+    return to_string(ast.tree());
 }
 
 }
