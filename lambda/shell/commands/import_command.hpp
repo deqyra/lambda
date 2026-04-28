@@ -65,7 +65,17 @@ existing declarations with the imported ones.
                 continue;
             }
 
-            auto [error_code, id, ex] = declare(command, force, env.declarations);
+            std::string_view declaration = line;
+            declaration = tools::trim(declaration);
+            if (not declaration.starts_with("let")) {
+                continue;
+            }
+
+            declaration.remove_prefix(3); // sizeof("let")
+            declaration = tools::trim(declaration);
+
+            auto [error_code, id, ex] = declare(declaration, force, env.declarations);
+
             switch (error_code) {
             using enum declare_status::ec;
             case missing_body:
